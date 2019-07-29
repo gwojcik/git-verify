@@ -23,7 +23,7 @@
 #include <istream>
 #include <ostream>
 #include <string>
-#include <vector>
+#include <set>
 #include <algorithm>    // for min()
 #include <cerrno>       // for errno
 #include <cstddef>      // for size_t, NULL
@@ -61,6 +61,8 @@
 namespace redi
 {
   /// Common base class providing constants and typenames.
+      static std::set<int> allPids;
+      static std::atomic_flag pidState = ATOMIC_FLAG_INIT;
   struct pstreams
   {
     /// Type used to specify how to connect to the process.
@@ -1313,6 +1315,9 @@ namespace redi
       // Three pairs of file descriptors, for pipes connected to the
       // process' stdin, stdout and stderr
       // (stored in a single array so close_fd_array() can close all at once)
+      while (pidState.test_and_set()){
+          // empty
+      };
       fd_type fd[] = { -1, -1, -1, -1, -1, -1 };
       fd_type* const pin = fd;
       fd_type* const pout = fd+2;
@@ -1334,6 +1339,10 @@ namespace redi
       if (!error_ && mode&pstderr && ::pipe(perr))
         error_ = errno;
 
+      for(auto && a : fd) {
+          allPids.erase(a);
+      }
+
       if (!error_)
       {
         pid = ::fork();
@@ -1341,6 +1350,9 @@ namespace redi
         {
           case 0 :
           {
+            for(auto && fx : allPids) {
+                ::close(fx);
+            }
             // this is the new process
 
             // for each open pipe close one end and redirect the
@@ -1382,6 +1394,9 @@ namespace redi
           }
           default :
           {
+            for(auto && a : fd) {
+                allPids.insert(a);
+            }
             // this is the parent process, store process' pid
             ppid_ = pid;
 
@@ -1401,6 +1416,7 @@ namespace redi
               rpipe_[rsrc_err] = perr[RD];
               ::close(perr[WR]);
             }
+            pidState.clear();
           }
         }
       }
