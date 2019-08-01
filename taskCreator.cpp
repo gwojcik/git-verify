@@ -89,9 +89,9 @@ TaskPhases TasksCreator::create() {
         }
     }
     changedByExt["___any_change___"].push_back(changesData.newFileContent.size());
-    changesData.newFileContent.push_back("");
+    changesData.newFileContent.push_back("non empty content");
     changesData.newFiles.push_back("___any_change___");
-    changesData.oldFileContent.push_back("");
+    changesData.oldFileContent.push_back("non empty content");
 
     auto forEachFile = [&changedByExt, &changesData, &phases, &getAddedLines](const TaskType & taskType) -> void{
         namespace fs = std::filesystem;

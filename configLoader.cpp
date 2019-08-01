@@ -173,7 +173,7 @@ namespace YAML {
             LogDev("loader - useStdin ", process.useStdin ? 1: 0);
             process.skipOnEmptyFile = node["skipOnEmptyFile"].as<bool>(true);
             process.executable = node["executable"].as<std::string>();
-            if (process.testType == TestType::DIFF) {
+            if (process.testType == TestType::DIFF || process.testType == TestType::DIFF_WITH_CHECKOUT) {
                 if (!node["logDiffFilterRegex"]) {
                     LogErr(R"(process.testType = "DIFF" require "logDiffFilterRegex" field)");
                     return false;
