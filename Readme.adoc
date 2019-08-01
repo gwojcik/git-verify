@@ -1,0 +1,66 @@
+= git-test
+:icons: font
+
+Tool for testing changes in code.
+
+== Usage
+`git-test <revision>`
+`@` is not supported as `<revision>` 
+
+== Configuration
+
+.config location:
+- global - `$XDG_CONFIG_HOME/pre-push4/taskConfig.yml`, if `$XDG_CONFIG_HOME` is not set: `/.config/pre-push4/taskConfig.yml`
+- project - `./pre-push4.yml`
+- project user config - `./pre-push4.user.yml`, for override project configuration
+
+.example configuration
+[source,perl]
+----
+flake8:     # <1>
+    description: flake8 - https://gitlab.com/pycqa/flake8   ## <2>
+    targetType: FILE    ## <3>
+    file:               ## <4>
+        ext: [py]       ## <5>
+        files: ["test.py"]    ## <6>
+        exceptions: ["test2.py"]    ## <7>
+    type: PROCESS             ## <8>
+    process:                  ## <9>
+        testType: DIFF        ## <10>
+        useStdin: true        ## <11>
+        executable: flake8    ## <12>
+        params: ['--stdin-display-name', {special: 'FILENAME'}, '-']    ## <13>
+        logDiffFilterRegex: |-         ## <14>
+            :\d+:\d+:
+        matchForSuccess: '.*test1.*'   ## <15>
+        matchForFail: '.*test2.*'      ## <16>
+----
+<1> name of test, unique, will overwrite in different configuration files
+<2> `description` - unused
+<3> `targetType` - possible values:
+* `FILE` - change in file, provide file content
+* `FILE_NAME` - change in file, file content is not important, works identical as `FILE`
+* `COMMIT_TEXT` - commit messages
+* `ADDED_TEXT` - change in file, provide changed or new lines. White spaces are ignored.
+* `BUILD` - prepare for other tests, always executed first in single thread.
+* `ANY_CHANGE` - run once, for whole project tests
+
+<4> `file` - file parameters, required if `targetType` is `FILE`, `FILE_NAME` or `ADDED_TEXT`.
+<5> `ext` - extensions of tested files
+<6> `files` - files and directories to test, default is all files
+<7> `exceptions` - excluded files and directories
+<8> `type` - type of test, only allowed value is `PROCESS` - calling external executable
+<9> `process` - process parameters
+<10> `testType` - possible values:
+* `DIFF` - compare output of process, require `useStdin` and `logDiffFilterRegex`
+* `DIFF_WITH_CHECKOUT` - compare output of process with checkout, require `logDiffFilterRegex`, forbids `useStdin`
+* `RETURN` - check process return value, 0 is success
+* `MATCH_SUCCESS` - check if process output matches `matchForSuccess`
+* `MATCH_FAIL` - check if process output matches `matchForFail`
+
+<11> `useStdin` - `true` if process expect data on stdin.
+<12> `executable` - executable name
+<13> `params` - lost of process parameters, use `{special: 'FILENAME'}` for filename
+<14> `logDiffFilterRegex` - regexp for filtering process output for diff testTypes. Useful for striping line numbers from output.
+<15> `matchForSuccess` - regexp for testType = `MATCH_SUCCESS`
+<16> `matchForFail` - regexp for testType = `MATCH_FAIL`
