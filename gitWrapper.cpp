@@ -55,9 +55,13 @@ namespace {
             throw std::runtime_error(std::to_string(isNotOk) + " " + msg + "\nlibgit2 msg: " + errMsg);
         }
     }
-
-    git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
     
+    constexpr git_diff_options getDiffOptsIgnoreWhiteSpace() {
+        git_diff_options diffopts = GIT_DIFF_OPTIONS_INIT;
+        diffopts.flags = GIT_DIFF_NORMAL | GIT_DIFF_IGNORE_WHITESPACE;
+        return diffopts;
+    }
+
     struct getAddedLines_payload {
         const std::string & fileName;
         std::string & result;
@@ -177,7 +181,8 @@ std::vector<int> GitWrapper::compareLogs(std::string oldLog, std::string newLog)
 
 ChangesData GitWrapper::getChangedFiles(git_tree * oldTree, git_tree * newTree) {
     git_diff * diff = nullptr;
-    ok(git_diff_tree_to_tree(&diff, repo, oldTree, newTree, nullptr), "tree diff");
+    git_diff_options diffopts = getDiffOptsIgnoreWhiteSpace();
+    ok(git_diff_tree_to_tree(&diff, repo, oldTree, newTree, &diffopts), "tree diff");
     ChangesData result;
     Messages msgs;
     FileCbPayload payload = {.msgs = msgs, .newFiles = result.newFiles};
@@ -236,6 +241,8 @@ std::string GitWrapper::getAddedLines(const std::string& newCommitShaStr, const 
     ok(git_commit_tree(&newTree, newCommit), "new commit tree");
     ok(git_commit_tree(&oldTree, oldCommit), "old commit tree");
 
+    git_diff_options diffopts = getDiffOptsIgnoreWhiteSpace();
+    
     git_diff * diff = nullptr;
     git_diff_tree_to_tree(&diff, repo, oldTree, newTree, &diffopts);
     

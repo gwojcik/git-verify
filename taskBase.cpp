@@ -46,7 +46,7 @@ std::pair<int, Messages> callProcess(const std::string & name, const std::vector
         STDOUT = 2,
         ALL = STDERR | STDOUT
     };
-    int end;
+    int end = 0;
     constexpr int size = 1024;
     std::string buf;
     buf.resize(size);

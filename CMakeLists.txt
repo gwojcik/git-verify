@@ -9,7 +9,7 @@ add_executable(git-verify main.cpp taskBase.cpp configLoader.cpp gitWrapper.cpp 
 
 target_compile_features(git-verify PRIVATE cxx_std_17)
 
-target_compile_options(git-verify PRIVATE -g3 -O0 -Wall -Wextra -std=c++17)
+target_compile_options(git-verify PRIVATE -O3 -Wall -Wextra -std=c++17)
 
 # target_include_directories(git-verify PRIVATE /mnt/nvme/test/libgit2/include) # TODO rm
 
